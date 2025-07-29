@@ -42,3 +42,6 @@ docker stop "containerID"
 - I **Container** sono le unità software che girano. Possono essere create quanti container vogliamo da una stessa img.
 
 - **DockerHub** contiene varie img ufficiali pre-built.
+
+**Le img sono READ-ONLY**, se modifichiamo il codice sorgente dobbiamo fare una nuova build dell'img e un nuovo run di un nuovo container.
+E sono **Layer Based** ogni istruzione nel docker file crea un Layer. Quando modifichiamo un layer tutti quelli successivi vengono ricostruiti. È importante l'ordine delle istruzioni per ottimizzare il processo di build e poter usare le versioni in cache.
