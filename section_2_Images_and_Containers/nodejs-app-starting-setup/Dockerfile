@@ -5,11 +5,16 @@ FROM node
 # Imposta la cartella di lavoro
 WORKDIR /app
 
-# Copiamo i file nella workdir
-# equivale a `COPY . /app`
-COPY . ./ 
+# Copiamo il file package.json nella workdir
+# Questo permette di installare le dipendenze prima di copiare il resto dei file,
+# così da non dover reinstallare le dipendenze se solo i file di codice cambiano
+COPY package.json ./
 
 RUN npm install
+
+# Copiamo i file nella workdir
+# equivale a `COPY . /app`
+COPY . /app
 
 # Esponiamo la porta 80 (è per documentazione, dobbiamo specificare nel run del container la porta - ES: docker run -p 3000:80 nome-immagine)
 EXPOSE 80
