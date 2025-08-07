@@ -115,3 +115,22 @@ Quando vogliamo rimanere in ascolto e poter **digitare da terminale** degli inpu
 ## Sharing Images on dockerhub (renaming images to match repo name on dockerhub)
 
 # Section 3 Mangaging Data & Working Volumes
+
+## Data Categories
+
+1. Application (code + env) **read-only**.
+2. **Temporary** app Data (es. user input) **read-write** stored in container temporary (non si perde allo stop/restart, ma se ne creiamo uno nuovo lo perdiamo.). Il container non è collegato in nessun modo al nostro file system.
+3. **Permanent** app Data (es user account/DB) **read-write** Conservati nei container con l'uso dei **Volumes**
+
+## Volumes and Bind Mounts
+
+For Persistent Data.
+
+I volumi(anonimi o nominali) sono cartelle sul disco rigido della macchina host che vengono montate ("rese disponibili", mappate) nei contenitori
+
+Quando creiamo un volume, docker creerà sulla nostra macchina una cartella `docker volume ls`. (`docker volume rm nomevolume`)
+Quando usiamo un volume anonimo la sua vita è legata a quella del container.
+Un volume named invece avrà una vita separata, si dichiarano al run del container aggiungendo `-v nomeVolume:/app/nome_cartella`.
+I volumi anonimi o named sono gestiti da docker e noi non vi possiamo accedere.
+
+**Bind Mounts**
