@@ -23,25 +23,51 @@ app.get("/exists", (req, res) => {
 });
 
 app.post("/create", async (req, res) => {
-  const title = req.body.title;
-  const content = req.body.text;
+  try {
+    const title = req.body.title;
+    const content = req.body.text;
 
-  const adjTitle = title.toLowerCase();
+    if (!title || !content) {
+      return res.status(400).send("Title e content sono obbligatori");
+    }
 
-  const tempFilePath = path.join(__dirname, "temp", adjTitle + ".txt");
-  const finalFilePath = path.join(__dirname, "feedback", adjTitle + ".txt");
+    // Sanifica il titolo: rimuovi spazi e caratteri speciali
+    const adjTitle = title
+      .toLowerCase()
+      .trim() // Rimuovi spazi all'inizio e fine
+      .replace(/\s+/g, "-") // Sostituisci spazi con trattini
+      .replace(/[^a-z0-9-]/g, "") // Mantieni solo lettere, numeri e trattini
+      .replace(/-+/g, "-") // Rimuovi trattini multipli
+      .replace(/^-|-$/g, ""); // Rimuovi trattini all'inizio/fine
 
-  await fs.writeFile(tempFilePath, content);
-  exists(finalFilePath, async (exists) => {
-    if (exists) {
+    console.log("Original title:", title);
+    console.log("Sanitized title:", adjTitle);
+
+    const tempFilePath = path.join(__dirname, "temp", adjTitle + ".txt");
+    const finalFilePath = path.join(__dirname, "feedback", adjTitle + ".txt");
+
+    console.log("Temp file path:", tempFilePath);
+    console.log("Final file path:", finalFilePath);
+
+    // Scrivi nel file temporaneo
+    await fs.writeFile(tempFilePath, content);
+
+    // Verifica se il file finale già esiste
+    try {
+      await fs.access(finalFilePath);
+      await fs.unlink(tempFilePath);
       res.redirect("/exists");
-    } else {
-      // await fs.rename(tempFilePath, finalFilePath);
+    } catch (error) {
       await fs.copyFile(tempFilePath, finalFilePath);
       await fs.unlink(tempFilePath);
       res.redirect("/");
     }
-  });
+  } catch (error) {
+    console.error("Errore:", error);
+    res.status(500).send("Errore interno del server");
+  }
 });
 
-app.listen(80);
+// app.listen(80);
+// This will use the PORT environment variable set in the Dockerfile
+app.listen(process.env.PORT);

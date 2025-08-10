@@ -12,7 +12,11 @@ RUN npm install
 # Copy the rest of the application code to the working directory
 COPY . .
 
-EXPOSE 80
+ARG DEFAULT_PORT=80
+
+ENV PORT=${DEFAULT_PORT}
+
+EXPOSE $PORT
 
 # anonymous volume
 # This will create a volume that is not named
@@ -22,11 +26,16 @@ EXPOSE 80
 # will be mapped to a volume on the host
 # or a named volume
 # to allow data persistence
-VOLUME ["/app/feedback"]
+# VOLUME ["/app/feedback"]
 
 
 # Start the application
-CMD ["node", "server.js"]
+# CMD ["node", "server.js"]
+# This will start the application using nodemon,
+# which will automatically restart the server when files change
+# This is useful for development purposes
+CMD ["npm", "start"]
+
 
 
 

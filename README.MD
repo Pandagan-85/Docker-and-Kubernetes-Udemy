@@ -134,3 +134,58 @@ Un volume named invece avrà una vita separata, si dichiarano al run del contain
 I volumi anonimi o named sono gestiti da docker e noi non vi possiamo accedere.
 
 **Bind Mounts**
+Definiamo una cartella sulla nostra macchina host. Sono ottimi per dati persistenti e che devono essere editati anche da noi (si può usare per il codice sorgente ed evitare il rebuilt.)
+
+Modifichi codice → salvi il file → refresh browser → testa → se non va bene → modifichi di nuovo → salvi → testa
+
+Focus > section_3 > [Volumes_and_bind_mounts.md](/section_3_Managing_data_and_working_with_volumes/Volumes_and_bind_mounts.md)
+
+## Read Only Volumes
+
+In questo modo con `:ro` evitiamo che il nostro container possa modificare il codice sorgente, e specifichiamo i path che non devono sottostare al readonly(delle **eccezione che devono rimanere scrivibili**).
+
+```
+docker run -d --rm -p 3000:80 --name feedback-app \
+-v feedback:/app/feedback \
+-v $PWD:/app:ro \
+-v /app/temp \
+-v /app/node_modules \
+feedback-node:volumes
+```
+
+**Longest Path Wins (Most specific path wins)**
+
+```
+-v $PWD:/app:ro           # Specificità: /app (livello 1)
+-v /app/temp              # Specificità: /app/temp (livello 2)
+-v /app/node_modules      # Specificità: /app/node_modules (livello 2)
+-v feedback:/app/feedback # Specificità: /app/feedback (livello 2)
+```
+
+## Managin Docker Volumes
+
+`docker volume ls` \
+`docker volume create [nomeVolume]` \
+informazioni sul volume \
+`docker volume inspect [nomeVolume]`
+`docker volume rm [nomeVolume]`
+
+## COPY vs Bind Mounts
+
+Il bind mount lo usiamo in fase dev per essere veloci e vedere subito i risultati.
+Il bind mount **sovrascrive** i file copiati con `COPY . .` durante lo sviluppo.
+
+In produzione, rimuoviamo il bind mount e l'immagine usa i file copiati durante il build con `COPY . .`.
+
+**Una sola immagine, due modalità d'uso**:
+
+- **Dev**: `docker run -v $PWD:/app my-app` (bind mount attivo)
+- **Prod**: `docker run my-app` (usa COPY del Dockerfile)
+
+## Dockerignore
+
+`.dockerignore` è come il `.gitignore`. Serve per indicare quali file non dobbiamo copiare nelle istruzioni di `COPY . .` nella creazione dell'immagine.
+
+## Env Variables & Security
+
+AspettoARGENVQuandoSolo build timeBuild + RuntimeVisibilitàDockerfile onlyContainer processesOverride--build-arg-e al runEreditàNoSì (processi figli)Uso tipicoVersioni, build configApp config, secrets
