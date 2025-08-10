@@ -227,3 +227,20 @@ Connecting Containers! (& external networks) (Use case):
 1. Comunicare dal container a un serzivio api esterno (es.swapi, api di star wars)
 2. Comunicare dal container a un servizio sulla nostra host machine (es database)
 3. Comunicare dal container a un altro container (che ad esempio ha un SQL databse)
+
+# Section 6 Docker Compose
+
+Permette il setup automatizzato di multipli containers.
+Es. un container per front-end e uno per back-end
+
+Permette di rimpiazzare i comandi `docker build ...` e `docker run ...` **creando un unico file di configurazione** e comandi di orchestrazione come `build, start, stop`
+
+> - Non sostituisce il dockerfile per le img custom
+> - Non sostituisce le img o containers
+> - Non è fatto per gestire multipli containers su differenti host
+
+# Section 11 Getting started with Kubernetes
+
+è come un framework, una collezione di concetti, uno standard.
+Ci aiuta con l'orchestrazione di container, e il deploy su larga scala, in maniera indipendente rispetto al servizio provider cloud che stiamo usando.
+Focus > section_11_Kubernetes > [k8s_getting_started.md](./section_11_Kubernetes/k8s_getting_started.md)
