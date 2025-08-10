@@ -188,4 +188,42 @@ In produzione, rimuoviamo il bind mount e l'immagine usa i file copiati durante 
 
 ## Env Variables & Security
 
-AspettoARGENVQuandoSolo build timeBuild + RuntimeVisibilitàDockerfile onlyContainer processesOverride--build-arg-e al runEreditàNoSì (processi figli)Uso tipicoVersioni, build configApp config, secrets
+| Aspetto    | ARG                    | ENV                 |
+| ---------- | ---------------------- | ------------------- |
+| Quando     | Solo build time        | Build + runtime     |
+| Visibilità | Dockerfile only        | Container processes |
+| Override   | `--build-arg`          | `-e` al run         |
+| Eredità    | No                     | Sì (processi figli) |
+| Uso tipico | Versioni, build config | App config, secrets |
+
+**ARG** può essere usato ad esempio per avere configurazioni diverse dalla stesa codebase:
+
+```bash
+
+# Build immagine DEV (porta 3000)
+docker build --build-arg DEFAULT_PORT=3000 -t my-app:dev .
+
+# Build immagine PROD (porta 80)
+docker build --build-arg DEFAULT_PORT=80 -t my-app:prod .
+
+# Build immagine TEST (porta 8080)
+docker build --build-arg DEFAULT_PORT=8080 -t my-app:test .
+
+```
+
+E poi fare
+
+```bash
+# Stessa codebase, configurazioni diverse!
+docker run -p 3000:3000 my-app:dev   # Dev environment
+docker run -p 80:80 my-app:prod      # Production environment
+docker run -p 8080:8080 my-app:test  # Test environment
+```
+
+# Section 4 Networking (Cross-) container communication
+
+Connecting Containers! (& external networks) (Use case):
+
+1. Comunicare dal container a un serzivio api esterno (es.swapi, api di star wars)
+2. Comunicare dal container a un servizio sulla nostra host machine (es database)
+3. Comunicare dal container a un altro container (che ad esempio ha un SQL databse)
