@@ -228,6 +228,8 @@ Connecting Containers! (& external networks) (Use case):
 2. Comunicare dal container a un servizio sulla nostra host machine (es database)
 3. Comunicare dal container a un altro container (che ad esempio ha un SQL databse)
 
+Focus > section_4_Networking > [networking.md](./section_4_Networking/networking.md)
+
 # Section 6 Docker Compose
 
 Permette il setup automatizzato di multipli containers.
