@@ -230,6 +230,19 @@ Connecting Containers! (& external networks) (Use case):
 
 Focus > section_4_Networking > [networking.md](./section_4_Networking/networking.md)
 
+# Section 5 Building Multi-Container App. with Docker
+
+- Combining multiple services to one app
+- Working with multiple containers
+
+3 Building Blocks
+
+1. Database (MongoDB)
+2. Backend (NodeJS REST API)
+3. Frontend (React SPA)
+
+Focus > section_5_Building_multi_cintainer_app > [multi-container.md](./section_5_Building_multi_cintainer_app/multi-container.md)
+
 # Section 6 Docker Compose
 
 Permette il setup automatizzato di multipli containers.

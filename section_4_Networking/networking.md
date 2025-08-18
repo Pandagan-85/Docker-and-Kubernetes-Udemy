@@ -133,3 +133,5 @@ docker network disconnect my-net my-container
 ```
 
 Le reti Docker sono fondamentali per creare architetture multi-container sicure e organizzate!
+
+## Docker Network IP Resolving
