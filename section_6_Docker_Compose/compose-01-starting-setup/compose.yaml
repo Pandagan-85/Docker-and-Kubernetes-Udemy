@@ -1,0 +1,20 @@
+services:
+  mongodb:
+    image: "mongo"
+    container_name: "mongodb"
+    ports:
+      - "27017:27017"
+    volumes:
+      - data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=panda
+      - MONGO_INITDB_ROOT_PASSWORD=secret
+    #env_file:
+    #- ./env/mongo.env
+
+  backend:
+
+  frontend:
+# only named volumes are specified in the volumes section
+volumes:
+  data:

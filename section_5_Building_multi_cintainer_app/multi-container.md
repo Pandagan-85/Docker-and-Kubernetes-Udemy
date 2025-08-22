@@ -74,6 +74,8 @@ buildiamo img `docker build -t goals-react .` e runniamo il container `docker ru
 
 ## Aggiungere volumi per persistenza dei dati e live source code update
 
+### Mongo db
+
 Al momento se stoppiamo mongodb perdiamo tutte le entry.
 
 aggiungiamo un **named volume** al container **mongodb**, in questo modo anche se stoppiamo il container mongodb, al nuovo run caricherà i dati salvati precedentemente.
@@ -94,4 +96,66 @@ adesso modifichiamo in app.js per aggiungere name e pse
 ```mongoose.connect(
   "mongodb://panda:secret@mongodb:27017/course-goals?authSource=admin",
   {
+```
+
+### aggiungere 3 volumi al **backend**
+
+`docker run --name goals-backend -v /Users/pandagan/workspace/projects/02_docker_udemy/section_5_Building_multi_cintainer_app/multi-01-starting-setup/backend:/app -v logs:/app/logs -v /app/node_modules -d --rm -d -p 80:80 --network goals-net goals-node`
+
+#### 1 **bind mount**
+
+`-v /Users/pandagan/workspace/projects/02_docker_udemy/section_5_Building_multi_cintainer_app/multi-01-starting-setup/backend:/app`
+
+- Mappa la cartella del codice sorgente dal tuo Mac direttamente nella cartella /app del container
+- Utile per sviluppo: le modifiche al codice si riflettono immediatamente nel container
+
+#### 2 **Named Volume**
+
+`-v logs:/app/logs`
+
+- Crea un volume chiamato "logs" gestito da Docker
+- I log vengono persistiti anche se il container viene rimosso
+- Docker gestisce automaticamente dove memorizzare questi dati
+
+#### 3 **Anonymous Volume**
+
+`-v /app/node_modules`
+
+- Crea un volume anonimo per la cartella `node_modules`
+- Questo è un trucco comune in Node.js per evitare che le `node_modules` dell'host (se esistono) sovrascrivano quelle del container
+- Garantisce che il container usi le proprie dipendenze installate durante il build
+
+Nel backend aggiungiamo la dipendenza **nodemon**, basata su node, che monitora e aggiorna il server in caso di modifiche del codice.
+
+Nel docker file
+
+```
+# CMD ["node", "app.js"]
+
+## restart server when code changes
+CMD ["npm", "start"]
+```
+
+Inoltre aggiungiamo delle variaibili di ambiente per gestire username e psw di mongodb
+
+```
+EXPOSE 80
+
+ENV MONGODB_USERNAME=root
+ENV MONGODB_PASSWORD=secret
+
+```
+
+```
+docker run --name goals-backend -v /Users/pandagan/workspace/projects/02_docker_udemy/section_5_Building_multi_cintainer_app/multi-01-starting-setup/backend:/app -v logs:/app/logs -v /app/node_modules -e MONGODB_USERNAME=panda -d --rm -d -p 80:80 --network goals-net goals-node
+```
+
+`docker logs goals-backend`
+
+### Aggiungere live source update al frontend
+
+Useremo **bind mount** per avere in tempo reale i cambiamenti al codice sorgente del frontend
+
+```
+docker run -v /Users/pandagan/workspace/projects/02_docker_udemy/section_5_Building_multi_cintainer_app/multi-01-starting-setup/frontend/src:/app/src --name goals-frontend --rm -p 3000:3000 -it goals-react
 ```

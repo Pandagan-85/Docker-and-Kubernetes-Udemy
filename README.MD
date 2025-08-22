@@ -254,6 +254,8 @@ Permette di rimpiazzare i comandi `docker build ...` e `docker run ...` **creand
 > - Non sostituisce le img o containers
 > - Non è fatto per gestire multipli containers su differenti host
 
+Focus > section_6_Docker_Compose > [docker_compose.md](./section_6_Docker_Compose/docker_compose.md)
+
 # Section 11 Getting started with Kubernetes
 
 è come un framework, una collezione di concetti, uno standard.
