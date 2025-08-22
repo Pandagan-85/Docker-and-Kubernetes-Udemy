@@ -76,7 +76,7 @@ buildiamo img `docker build -t goals-react .` e runniamo il container `docker ru
 
 Al momento se stoppiamo mongodb perdiamo tutte le entry.
 
-aggiungiamo un **named volume** al container mongodb, in questo modo anche se stoppiamo il container mongodb, al nuovo run caricherà i dati salvati precedentemente.
+aggiungiamo un **named volume** al container **mongodb**, in questo modo anche se stoppiamo il container mongodb, al nuovo run caricherà i dati salvati precedentemente.
 
 `docker run --name mongodb -v data:/data/db  -d --rm --network goals-net mongo`
 
