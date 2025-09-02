@@ -6,15 +6,37 @@ services:
       - "27017:27017"
     volumes:
       - data:/data/db
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=panda
-      - MONGO_INITDB_ROOT_PASSWORD=secret
-    #env_file:
-    #- ./env/mongo.env
+    # environment:
+    # - MONGO_INITDB_ROOT_USERNAME=panda
+    # - MONGO_INITDB_ROOT_PASSWORD=secret
+    env_file:
+      - ./env/mongo.env
 
   backend:
+    build: ./backend
+    ports:
+      - "80:80"
+    volumes:
+      - logs:/app/logs
+      - ./backend:/app
+      - /app/node_modules
+    env_file:
+      - ./env/backend.env
+    depends_on:
+      - mongodb
 
   frontend:
-# only named volumes are specified in the volumes section
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/src:/app/src
+    # interactive mode
+    stdin_open: true
+    tty: true
+    depends_on:
+      - backend
+# only named volumes are specified in the volumes section (not anonymous volumes or bind mounts)
 volumes:
   data:
+  logs:

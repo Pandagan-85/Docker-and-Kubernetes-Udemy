@@ -37,6 +37,9 @@ docker compose ps
 # Rebuild delle immagini se necessario
 docker compose up --build
 
+# build image without starting it
+docker compose build
+
 # Rimuovi tutto incluse le immagini
 docker compose down --rmi all
 
