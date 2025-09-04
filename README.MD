@@ -268,6 +268,9 @@ Focus > section_8_laravel_php_setup> [project.md](./section_8_laravel_php_setup/
 
 # Section 9 - Deploying Docker Containers
 
+From DEV to PROD! (Focus on WebApp Deployment).
+Useremo AWS come hosting provider.
+
 Focus > section_9_deploying_docker_containers> [deploying_docker_containers.md](./section_9_deploying_docker_containers/deploying_docker_containers.md)
 
 # Section 11 Getting started with Kubernetes
