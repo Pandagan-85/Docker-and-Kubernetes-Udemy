@@ -157,3 +157,85 @@ E poi da ECS > cluster > nome cluster usato > Servizi > il servizio usato > aggi
 ## ![](this_works.png)
 
 # Preparing a Multi Container APP
+
+In produzione non useremo docker-compose. Ma averlo creato nelle lezioni precedenti ci permetterà di fare il deploy manuale delle varie parti in maniera già strutturata.
+
+`docker buildx build --platform linux/amd64 -t pandagandocker/goals-backend:latest ./backend --push`
+
+`http://goals-alb-1107264905.eu-west-1.elb.amazonaws.com/goals`
+
+soluzione per fare tutto con la nuova versione di aws
+
+2. Once it was working on my local Docker Compose, i rebuilt my backend image.
+   Note: I am 1 step outside my backend folder
+   docker buildx build --platform linux/amd64 -t [your-namespace]/goals-backend ./backend
+   docker push [your-namespace]/goals-backend
+
+CLUSTER 3) Create a Cluster and name it anything (Leave the rest on Default)
+
+TASKS 4) I navigated to "Task Definitions" on the side bar.
+infrastructure (Leave the rest on defaults)
+Task Name => Any Name
+Launch Type =>. AWS Fargate
+OS => Linux/X86_64
+Task Role => ecsTaskExecutionRole
+Task Execution Role => ecsTaskExecutionRole
+
+Note: One Error is caused by the Backend Container trying to connect to the database before the database is ready
+
+Containers
+Name => backend
+Image URI => [ Your image on Dockerhub ]
+Port Mapping => 80 | TCP | skip | HTTP
+
+Environment Variables => The only thing worth noting here is the Mongo url should be "localhost" (That's how AWS work now)
+
+Log Collection => Use it ✅
+Startup Dependency => [your database container] | HEALTHY
+Name => database
+Image URI => [ Your image on Dockerhub ]
+Port Mapping => 27017 | TCP | skip | skip
+
+Environment Variables => username | password (must match used in container 1)
+
+Log Collection => Use it ✅
+
+Health Check => We need to set health check because container backend's startup dependency depends on container database to be healthy before it can start up.
+    command => CMD-SHELL,mongosh --eval 'db.adminCommand("ping")' || exit 1
+    interval => 30
+    timeout => 5
+    start period => 10
+    retries => 3
+Once you're done with that Create the Task
+
+SERVICE 5) the Networking bit is the problem here
+VPC => default
+Subnets => use all available to you
+Security Group => Create a new one
+Note: Inbound Rule basically controls what ip address can access the application
+under inbound rule expose HTTP (port 80 / TCP)  IPv4, IPv6.
+This just essentially mean any IP can access this application only through port 80, which is localhost/HTTP.
+outbound rule should be allowed on everything from anywhere through IPv4.
+Note: At this point you can access the application via the backend container's public address
+The problem with that though is after every revision (update) the IP changes, which means we need a load balancer
+
+LOAD BALANCER 6) I created an application Load Balancer with the exact same VPC, subnet and Security Group as my Service.
+i created it on IPv4, internet facing
+for the Listener, it listens on HTTP
+for the target group, follow the tutorial, just make sure your health Check is on "/goals" because its set to "/" by default.
+
+Note: Make sure to attach the Target group to the Load Balancer, and the Load balancer to the service
+Note: At this point you can access the application via the DNS on the configuration and networking section of your service.
+
+### Aggiungere un volume
+
+Tipo di configurazione > EFS, Tipo di Volume > EFS.
+Ma dobbiamo creare un file system > e andiamo su Amazon EFS console, diamo un nome e personalizza:
+Dobbiamo creare un nuovo security group, e diamo una regola di entrata, con tipo **NFS**
+
+> Adesso abbiamo un running server con 2 container, e un volume aggiunto al container database.
+> ![](stato-2container-1volume.png)
+
+### Database & Containers: An important consideration
+
+Possiamo gestire i nostri container database
