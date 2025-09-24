@@ -324,3 +324,9 @@ Creiamo un nuovo load balance e gruppo target
 
 Dopo che creiamo la definizione di processo, creiamo un servizio basato su questa task, a cui assegnamo il nuovo load balancer.
 ![](./laod-balancer-frontend.png)
+
+E possiamo usare il front-end!
+
+## Understanding Multi stage build Targets
+
+Con un docker file multi stage, possiamo anche targettare solo una parte per il build e lo facciamo usando `--target "nome"` il nome è quello che abbiamo definito da `FROM img as NOME`

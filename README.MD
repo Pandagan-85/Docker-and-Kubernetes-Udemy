@@ -273,6 +273,14 @@ Useremo AWS come hosting provider.
 
 Focus > section_9_deploying_docker_containers> [deploying_docker_containers.md](./section_9_deploying_docker_containers/deploying_docker_containers.md)
 
+# Extra Focus on AWS
+
+[AWS focus](AWS.md)
+
+# Section 10 Docker & Containers Summary
+
+[docker summary](./section_10_docker_containers_summary/docker_summary.md)
+
 # Section 11 Getting started with Kubernetes
 
 è come un framework, una collezione di concetti, uno standard.
