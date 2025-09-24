@@ -3,3 +3,5 @@
 section_8_laravel_php_setup/project/src
 
 section_9_deploying_docker_containers/deployment-01-starting-setup/example-1.pem
+
+*.env

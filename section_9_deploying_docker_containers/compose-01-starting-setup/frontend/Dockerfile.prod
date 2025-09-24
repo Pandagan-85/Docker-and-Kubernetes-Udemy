@@ -1,0 +1,23 @@
+FROM node:14-alpine as build
+
+WORKDIR /app
+
+COPY package.json .
+
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+# Ci serve node solo per servire i file statici
+# Ogni istruzione FROM crea un nuovo stage di build
+FROM nginx:stable-alpine
+
+# vogliamo usare i file ottimizzati e servirli con nginx
+
+COPY --from=build /app/build /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

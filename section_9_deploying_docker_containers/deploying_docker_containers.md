@@ -238,4 +238,89 @@ Dobbiamo creare un nuovo security group, e diamo una regola di entrata, con tipo
 
 ### Database & Containers: An important consideration
 
-Possiamo gestire i nostri container database
+Possiamo gestire i nostri container database, come stiamo facendo ora con il nostro container MongoDB, che crea un database e permette di conneterci ad esso con la porta 27017.
+
+Ma questo potrebbe portarci dei problemi:
+
+- **Scaling** & **managing** availability can be challenging (potremmo dover scrivere in maniera simultanea, quindi potremmo avere problemi di sincronizzazione)
+- **Performance** (specialmente con spikes di traffico)
+- **Backup** & **security**, dobbiamo assicurarci che sia sicuro e che facciamo dei backup periodici.
+
+Quindi dobbiamo considerare l'idea di passare a un servizio gestito di database come **AWS RDS** o **MONGO DB ATLAS** (visto che stiamo lavorando con DB relazionali).
+
+## From data base container to managed DB
+
+> Torna il trade-offs tra **controllo** e **responsabilità**
+
+Se dicidiamo di usare Mongo DB atlas, non abbiamo più bisogno del container mongodb, e dobbiamo sostituire (in backend environment) nelle variabili di ambiente URL di mongo db che dovrà puntare al servizio gestito.
+
+Dopo aver creato tutto su mongodb, da AWS, definizioni di processo, creo una nuova revisione, eliminando il container che si occupa di mongo db, elimino il volume, elimino il fylestem EFS e il security group legato.
+
+Pusho il container modificato e aggiorno le credenziali sul container su aws.
+
+e testo che che il collegamento funzioni
+![](mongo_db.png)
+
+## Final App Architecture
+
+![](final_app_architecture.png)
+Dopo avere portato il db su Atlas, creeremo un secondo container per il front-end.
+
+Affronteremo il concetto del **build step**.
+![](build_step.png).
+
+Qualsiasi app front-end in dev la facciamo girare facendo partire il server con lo script di start, ma non va bene per la produzione. E se facciamo partire lo **script di build**, abbiamo il codice finale **ma non il running server**.
+
+Quindi dobbiamo creare un container diverso per la produzione, in quando il codice deve essere seguito in maniera diversa.
+
+In produzione non abbiamo bisogno di un server **node**, creo un secondo **Dockerfile.prod**
+
+## MULTI STAGE BUILD
+
+Ci permettono di avere un **Dockerfile** ma definisco multipli step di setup/build
+
+![](multi-stage-build.png)
+
+```bash
+FROM node:14-alpine as build
+
+WORKDIR /app
+
+COPY package.json .
+
+RUN npm install
+
+COPY . .
+
+RUN npm run build
+
+# Ci serve node solo per servire i file statici
+# Ogni istruzione FROM crea un nuovo stage di build
+FROM nginx:stable-alpine
+
+# vogliamo usare i file ottimizzati e servirli con nginx
+
+COPY --from=build /app/build /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+Ora facciamo build e push su dockerhub:
+`docker buildx build --platform linux/amd64 -t pandagandocker/goals-react:latest -f frontend/Dockerfile.prod ./frontend --push`
+
+Per aggiungere il nuovo container su AWS devo fare una nuova revisione della task definition.
+E nella sezione **Ordine delle dipendenze di avvio** impostiamo che il backend deve essere funzionante.
+![](ordine_dipendenze_avvio.png)
+
+> Ma non possiamo usare per entrambi i container la mappatura della porta 80 nella stessa task.
+
+Quindi dobbiamo creare una nuova definizione di processo a cui poi assegnare un servizio.
+Questo ci porterà ad avere due URL uno per il back e uno per il front.
+Dobbiamo aggiungere di nuovo url nel frontend, ma fare in modo che sia dinamico.
+Non possiamo usare le variaibli di ambiente di docker per il container frontend, perchè il codice non viene eseguito dentro un docker container ma in un browser.
+Creiamo un nuovo load balance e gruppo target
+
+Dopo che creiamo la definizione di processo, creiamo un servizio basato su questa task, a cui assegnamo il nuovo load balancer.
+![](./laod-balancer-frontend.png)
