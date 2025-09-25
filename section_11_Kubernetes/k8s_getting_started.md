@@ -63,8 +63,8 @@ Il componente più importante è **API SERVER**, la controparte di **Kubelet** s
 
 ## Key terms
 
-- Cluster: Un set di macchine nodo che runnano l'app containerizzata(worker node) o controlla altri nodi (MASTER)
-- Nodes(worker|master): Macchina fisica o virtuale che hosta una o più pode comunicano con il cluster.
-- POD: Running APP (container + risorse)
-- Containers: Docker container
-- Services: Un'astrazione che espone un set di pods tramite un endpoint di rete stabile (IP e porta fissi), anche quando i pods vengono creati/distrutti dinamicamente.
+- **Cluster**: Un set di macchine nodo che runnano l'app containerizzata(worker node) o controlla altri nodi (MASTER)
+- **Nodes**(worker|master): Macchina fisica o virtuale che hosta una o più pod e comunicano con il cluster.
+- **POD**: Running APP (container + risorse)
+- **Containers**: Docker container
+- **Services**: Un'astrazione che espone un set di pods tramite un endpoint di rete stabile (IP e porta fissi), anche quando i pods vengono creati/distrutti dinamicamente.
