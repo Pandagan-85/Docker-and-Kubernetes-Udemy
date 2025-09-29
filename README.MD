@@ -92,3 +92,9 @@ Focus > section_11_Kubernetes > [k8s_getting_started.md](./section_11_Kubernetes
   Focus > section_12_Kubernetes_in_action > [k8s_core_concept.md](./section_12_Kubernetes_in_action/k8s_core_concept.md)
 
 # Section 13 Managing Data & Volumes with Kubernetes
+
+- Storing Data (far sopravvivere i dati al riavvio dei pod)
+- Volumes (with k8s Persistent Volumes & Persistend Volumes Claims)
+- Environment Variables
+
+Focus > section_13_managing_data_volumes_with_kubernetes > [managing_data_and_volumes_in_k8s.md](./section_13_managing_data_volumes_with_kubernetes/managing_data_and_volumes_in_k8s.md)
