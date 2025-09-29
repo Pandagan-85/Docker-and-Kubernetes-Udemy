@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  type: LoadBalancer
+  selector:
+    app: second-app
+  ports:
+    - protocol: TCP
+      # il servizio espone la 80 e la mappa alla 8080 del container
+      port: 80
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: second-app-deployment
+spec:
+  replicas: 1
+  # selezioniamo il pod tramite l'etichetta
+  selector:
+    matchLabels:
+      app: second-app
+      tier: backend
+  # definiamo il pod, non specifichiamo kind: Pod perchè è implicito
+  template:
+    metadata:
+      labels:
+        app: second-app
+        tier: backend
+    spec:
+      containers:
+        # definiamo una lista di container, ogni container è indicato da un trattino
+        - name: second-node
+          image: pandagandocker/kub-first-app:2

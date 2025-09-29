@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: second-app-deployment
+spec:
+  replicas: 1
+  # selezioniamo il pod tramite l'etichetta
+  selector:
+    matchLabels:
+      app: second-app
+      tier: backend
+  # definiamo il pod, non specifichiamo kind: Pod perchè è implicito
+  template:
+    metadata:
+      labels:
+        app: second-app
+        tier: backend
+    spec:
+      containers:
+        # definiamo una lista di container, ogni container è indicato da un trattino
+        - name: second-node
+          image: pandagandocker/kub-first-app:2
+          # ogni volta che viene creato un pod, scarica sempre l'immagine
+          imagePullPolicy: always
+          # Check liveness probe
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            periodSeconds: 10
+            initialDelaySeconds: 5

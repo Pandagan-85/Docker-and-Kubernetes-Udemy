@@ -190,7 +190,7 @@ Solitamente non creiamo manualmente un pod, ma creiamo un oggetto Deployment.
 
 ### Comandi base
 
-# Schema Comandi kubectl - Guida Rapida
+## Schema Comandi kubectl - Guida Rapida
 
 ## 🔍 **VISUALIZZARE** (GET)
 
@@ -439,3 +439,388 @@ Per vedere l'ip che viene esposto grazie al Load Balancer
 `kubectl get services`
 NAME TYPE CLUSTER-IP EXTERNAL-IP PORT(S) AGE
 first-app LoadBalancer 10.103.28.141 localhost 8080:31480/TCP 37s
+
+### Cosa è un LoadBalancer
+
+Cos'è un LoadBalancer:
+Un LoadBalancer è un componente che:
+
+- Fornisce un punto di accesso stabile (IP fisso)
+- Distribuisce il traffico tra più istanze
+- Monitora la salute delle istanze
+
+Il problema che risolve:
+Senza LoadBalancer:
+
+```bash
+bashPod-1: IP 10.1.0.5 (può morire/cambiare)
+Pod-2: IP 10.1.0.8 (può morire/cambiare)
+Pod-3: IP 10.1.0.12 (può morire/cambiare)
+
+# Gli utenti come si collegano? 🤔
+```
+
+Con LoadBalancer:
+
+```bash
+bashLoadBalancer: IP FISSO 203.123.45.67
+    ↓ (distribuisce traffico a)
+Pod-1: IP 10.1.0.5
+Pod-2: IP 10.1.0.8
+Pod-3: IP 10.1.0.12
+
+# Gli utenti si collegano sempre a 203.123.45.67! ✅
+```
+
+**In AWS vs Kubernetes:**
+AWS Application/Network LoadBalancer:
+
+- IP esterno fisso per i tuoi servizi
+- Distribuisce traffico tra le istanze EC2
+- Auto-scaling: aggiunge/rimuove istanze
+- Health checks: controlla che le app siano healthy
+
+Kubernetes LoadBalancer Service:
+
+- Stesso concetto ma per i Pod
+- IP stabile che non cambia al restart dei Pod
+- Load balancing automatico tra le repliche
+- Service discovery interno al cluster
+
+Nel mio esempio pratico:
+`bashkubectl expose deployment first-app --type=LoadBalancer --port=8080`
+Cosa creo:
+
+```bash
+bashfirst-app Service (LoadBalancer)
+├── IP stabile: localhost:8080
+└── Punta ai Pod: first-app-xxx-xxx
+
+# Se il Pod muore e viene ricreato:
+first-app-xxx-xxx (NUOVO POD, nuovo IP interno)
+# Ma tu accedi sempre tramite: localhost:8080 ✅
+```
+
+I tipi di Service in Kubernetes:
+
+- **ClusterIP**: Solo interno al cluster
+- **NodePort**: Esposto su porta specifica del nodo
+- **LoadBalancer**: Esposto esternamente con IP stabile
+- **ExternalName**: Alias per servizi esterni
+
+Analogia pratica:
+
+> LoadBalancer = Receptionist di un hotel
+
+- Gli ospiti chiamano sempre lo stesso numero (IP fisso)
+- Il receptionist smista le chiamate alle stanze disponibili
+- Se una stanza è occupata, reindirizza ad un'altra
+- Gli ospiti non devono sapere quale stanza specifica
+
+## Restarting Containers
+
+Se visitiamo `/error` la nostra app andrà in crash, e questo porterà K8S a fare in atuomatico a un restart del pods.
+
+```
+❯ kubectl get pods
+NAME                         READY   STATUS    RESTARTS      AGE
+first-app-7bb547bb98-fm95q   1/1     Running   3 (35s ago)   19h
+❯ kubectl get pods
+NAME                         READY   STATUS   RESTARTS      AGE
+first-app-7bb547bb98-fm95q   0/1     Error    3 (51s ago)   19h
+❯ kubectl get pods
+NAME                         READY   STATUS   RESTARTS      AGE
+first-app-7bb547bb98-fm95q   0/1     Error    3 (55s ago)   19h
+❯ kubectl get pods
+NAME                         READY   STATUS   RESTARTS      AGE
+first-app-7bb547bb98-fm95q   0/1     Error    3 (60s ago)   19h
+❯ kubectl get pods
+NAME                         READY   STATUS    RESTARTS      AGE
+first-app-7bb547bb98-fm95q   1/1     Running   4 (26s ago)   19h
+
+```
+
+## Scaling in Action
+
+`kubectl get deployments`
+
+```
+❯ kubectl get deployments
+NAME        READY   UP-TO-DATE   AVAILABLE   AGE
+first-app   1/1     1            1           19h
+```
+
+Per attivare lo scaling dopo aver visto il nome del nostro deploy
+
+`kubectl scale deployment/first-app --replicas=3`
+
+> Un **replica** è una istanza di un pod, significa che quel pod/container specifico viene fatto girare il numero di volte che specifichiamo
+
+Visto che abbiamo un **load balancer** attivo, il traffico verrà distribuito tra i vari pods, e ad esempio se uno crash su /error, il traffico verrà spostato su quello funzionante.
+
+## Updating Deployment
+
+Se ad esempio cambiamo qualcosa nel nostro codice sorgente.
+
+Dobbiamo ri-fare il build dell'img (questo ovviamente non cambia)
+`docker build -t pandagandocker/kub-first-app:2 .`
+
+rifacciamo il push della nuova img con tag
+`docker push pandagandocker/kub-first-app:2`
+
+e diciamo a k8s di usare la nuova img
+`kubectl set image deployment/first-app kub-first-app=pandagandocker/kub-first-app:2`
+
+> Le img vengono aggiornate da k8s solo se hanno un nuovo tag.
+
+Per controllare lo stato:
+`kubectl rollout status deployment/first-app`
+
+> deployment "first-app" successfully rolled out
+
+[](update_image.png)
+
+## Deployment rollback history
+
+> Per annullare l'ultimo deployment
+> `kubectl rollout undo deployment/first-app`
+
+Per controllare la storia
+`kubectl rollout history deployment/first-app`
+
+deployment.apps/first-app \
+REVISION CHANGE-CAUSE \
+1 `<none>` \
+2 `<none>` \
+
+Se vogliamo ispezionare una revisione in particolare
+
+`kubectl rollout history deployment/first-app --revision=2`
+
+deployment.apps/first-app with revision #2\
+Pod Template:\
+ Labels: app=first-app\
+ pod-template-hash=5478c5b658\
+ Containers:\
+ kub-first-app:\
+ Image: pandagandocker/kub-first-app:2\
+ Port: `<none>`\
+ Host Port: `<none>`\
+ Environment: `<none>`\
+ Mounts: `<none>`\
+ Volumes: `<none>`\
+ Node-Selectors: `<none>`\
+ Tolerations: `<none>`
+
+> per fare il rollaback a una revisione specifica:
+> `kubectl rollout undo deployment/first-app --to-revision=1`
+
+> Ora vogliamo passare dall'approccio **imperativo** a quello **dichiarativo**.
+
+Per prima cosa eliminiamo il nostro servizio
+`kubectl delete service first-app` e il deployment
+`kubectl delete deployment first-app`
+
+## The imperative vs declarite approach
+
+Possiamo crea un file di configurazione, **Resource Definition** in un file YAML.
+
+![](./declerative_vs_imperative.png)
+
+## Creating a Deployment Configuration file (declarite approach)
+
+Creiamo un file `deployment.yaml` per specificare l'api version, controlliamo la documentazione [qui](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/)
+
+Per applicare il file di configurazione
+`kubectl apply -f=deployment.yaml`
+
+```bash
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: second-app-deployment
+spec:
+  replicas: 1
+  # selezioniamo il pod tramite l'etichetta
+  selector:
+    matchLabels:
+      app: second-app
+      tier: backend
+  # definiamo il pod, non specifichiamo kind: Pod perchè è implicito
+  template:
+    metadata:
+      labels:
+        app: second-app
+        tier: backend
+    spec:
+      containers:
+        # definiamo una lista di container, ogni container è indicato da un trattino
+        - name: second-node
+          image: pandagandocker/kub-first-app:2
+```
+
+Oltre a questo file dobbiamo creare il service file `service.yaml`, controlliamo la documentazione [qui](https://kubernetes.io/docs/concepts/services-networking/service/). Ci serve un servizio per esporre il cluster al mondo esterno.
+
+```bash
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  type: LoadBalancer
+  selector:
+    app: second-app
+  ports:
+    - protocol: TCP
+      # il servizio espone la 80 e la mappa alla 8080 del container
+      port: 80
+      targetPort: 8080
+```
+
+`kubectl apply -f=service.yaml`
+
+In questo modo possiamo visualizzare la nostra app da browser.
+
+## Updating & Deleting Resources
+
+Se ad esempio vogliamo moficare il numero di replicas, cambiamo il valore nel file di configurazione e lo riapplichiamo con `kubectl apply -f=deployment.yaml`
+
+Per cancellare `kubectl delete -f=deployment.yaml` in questo modo cancella le risorse che sono specificate dal file.
+
+## Multiple vs Single Config Files
+
+Nel nostro caso ad esempio i due file di configurazione potrebbero essere fusi in uno.
+Ma ogni file deve essere separata per indicare un nuovo oggetto da `---`.
+
+Quando combiniamo i file in un unico è buona pratica **mettere prima il service**, perchè le risorse vengono create **From top to bottom**.
+`kubectl delete -f=deployment.yaml -f=service.yaml`
+`kubectl apply -f=master-deployment.yaml`
+
+## More on Labels and Selectors
+
+### Labels (Etichette)
+
+Definizione:
+Labels sono coppie chiave-valore che attacchi agli oggetti Kubernetes per identificarli e organizzarli.
+
+Caratteristiche:
+
+- Puoi mettere quanti labels vuoi
+- Sono flessibili (crei le chiavi che vuoi)
+- Non devono essere unici (più pod possono avere lo stesso label)
+- Usati per organizzare e filtrare risorse
+
+### Selectors
+
+Definizione:
+Selectors sono query/filtri che cercano oggetti in base ai loro labels. Dicono a Kubernetes "trova tutti gli oggetti che hanno questi labels".
+
+**Tipi di selectors**
+
+Equality-based (uguaglianza)
+
+```yaml
+selector:
+  app: frontend # app DEVE essere "frontend"
+  environment: production # environment DEVE essere "production"
+```
+
+Set-based (insieme)
+
+```yaml
+selector:
+  matchLabels:
+    app: frontend
+  matchExpressions:
+    - key: environment
+      operator: In
+      values: [production, staging] # environment può essere production O staging
+    - key: version
+      operator: NotIn
+      values: ["1.0"] # version NON deve essere 1.0
+```
+
+### matchLabels vs matchExpression
+
+Le matchExpressions sono un modo più potente e flessibile di selezionare oggetti rispetto ai semplici matchLabels.
+
+```yaml
+selector:
+  matchExpressions:
+    - key: app
+      operator: In
+      values: [frontend, backend]
+# Significato: app può essere "frontend" OR "backend"
+```
+
+**Operatori disponibili**
+`In` Deve essere uno dei valori
+
+```yaml
+matchExpressions:
+  - key: environment
+    operator: In
+    values: [production, staging]
+# env = production OR env = staging
+```
+
+`NotIn` Non deve essere nessuno dei valori
+
+```yaml
+matchExpressions:
+  - key: environment
+    operator: NotIn
+    values: [development, test]
+# env ≠ development AND env ≠ test
+```
+
+`Exists` Il lbale deve esister
+
+```yaml
+matchExpressions:
+  - key: version
+    operator: Exists
+# Qualsiasi pod che ha il label "version", non importa il valore
+```
+
+`DoesNotExist` non deve esistere
+
+```yaml
+matchExpressions:
+  - key: deprecated
+    operator: DoesNotExist
+# Solo pod che NON hanno il label "deprecated"
+```
+
+| Operatore      | Descrizione                        | Esempio                |
+| -------------- | ---------------------------------- | ---------------------- |
+| `In`           | Valore deve essere nella lista     | `env: [prod, staging]` |
+| `NotIn`        | Valore NON deve essere nella lista | `version: [1.0, 1.1]`  |
+| `Exist`        | Label deve esistere                | `tier` presente        |
+| `DoesNotExist` | Label NON deve esistere            | `deprecated` assente   |
+
+## Liveness Probes
+
+nelle specifiche del container possiamo aggiungere un parametro `livenessProbe`.
+**livenessProbe** è un meccanismo di Kubernetes per verificare se un container è ancora vivo e funzionante.
+
+È un "controllo di salute" che Kubernetes esegue periodicamente per verificare se l'applicazione dentro il container è ancora responsive. Se fallisce, Kubernetes riavvia il container.
+
+```yaml
+containers:
+  # definiamo una lista di container, ogni container è indicato da un trattino
+  - name: second-node
+    image: pandagandocker/kub-first-app:2
+    # Check liveness probe
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 8080
+      periodSeconds: 10
+      initialDelaySeconds: 5
+```
+
+## A closer look at the configuration Options
+
+Dalla documentazione possiamo vedere che ad esempio per i containers possiamo specificare anche un parametro `imagePullPolicy` [documentazione](https://kubernetes.io/docs/concepts/containers/images/)
+per specificare quando deve essere fatto il pull dell'immagine specificata.
